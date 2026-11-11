@@ -28,6 +28,7 @@
   --gap: clamp(10px, 1vw, 16px);
   --zone-gap: clamp(28px, 2.6vw, 44px);   /* 두 구역 사이 간격 */
   --zone-pad: clamp(10px, 1vw, 16px);     /* 이차전지 배경 판이 카드 밖으로 나오는 폭 */
+  --carbon-bg: #f2f4f8;                   /* 탄소복합소재 구역 배경 (이차전지와 같은 밝기의 회색) */
   --battery-bg: #edf5ff;                  /* 이차전지 구역 배경 */
   --battery-ink: #002d9c;
 }
@@ -163,12 +164,13 @@ button, input { font: inherit; color: inherit; }
 .zone[hidden] { display: none; }
 .zone--carbon { flex: none; }
 .zone--battery { flex: 1 1 0; }
-.zone--battery::before {       /* 배경 판: 카드 바깥으로 살짝 넓게 깔아 카드 크기는 그대로 */
+.zone::before {                /* 배경 판: 카드 바깥으로 살짝 넓게 깔아 카드 크기는 그대로 */
   content: ""; position: absolute; z-index: -1;
   inset: calc(var(--zone-pad) * -1);
-  background: var(--battery-bg);
+  background: var(--carbon-bg);
   border-radius: 4px;
 }
+.zone--battery::before { background: var(--battery-bg); }
 .zone__label {
   display: flex; align-items: center; gap: 8px;
   height: 24px; margin-bottom: 10px;
@@ -304,7 +306,7 @@ button, input { font: inherit; color: inherit; }
 /* ---------- 태블릿·모바일: 세로 스크롤 ---------- */
 @media (max-width: 1023.98px), (max-height: 619.98px) {
   .zones { flex-direction: column; gap: calc(var(--zone-pad) * 2 + 24px); }
-  .zone--battery::before { left: calc(var(--gutter) * -1); right: calc(var(--gutter) * -1); border-radius: 0; }
+  .zone::before { left: calc(var(--gutter) * -1); right: calc(var(--gutter) * -1); border-radius: 0; }
   .zone__grid { --cols: 3 !important; }
 }
 @media (max-width: 760px) {
