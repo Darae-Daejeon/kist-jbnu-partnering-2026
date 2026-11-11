@@ -26,6 +26,10 @@
   --pill-blur: 10px;   /* 분야·기관 타원 뒤 흐림 */
   --photo-dark: .12;   /* 사진 전체 어둡게 */
   --gap: clamp(10px, 1vw, 16px);
+  --zone-gap: clamp(28px, 2.6vw, 44px);   /* 두 구역 사이 간격 */
+  --zone-pad: clamp(10px, 1vw, 16px);     /* 이차전지 배경 판이 카드 밖으로 나오는 폭 */
+  --battery-bg: #edf5ff;                  /* 이차전지 구역 배경 */
+  --battery-ink: #002d9c;
 }
 
 /* =========================================================
@@ -145,12 +149,43 @@ button, input { font: inherit; color: inherit; }
 .filter__btn.is-active { color: var(--ink); font-weight: 700; }
 .filter__btn.is-active span { color: var(--primary); }
 
-.tech-grid {
+/* 분야 구역: 탄소복합소재(왼쪽·흰 바탕) | 이차전지(오른쪽·옅은 파랑 바탕) */
+.zones {
+  display: flex;
+  gap: var(--zone-gap);
+}
+.zone {
+  position: relative;
+  isolation: isolate;          /* 배경 판을 카드 뒤, 페이지 위에 깔기 위함 */
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.zone[hidden] { display: none; }
+.zone--carbon { flex: none; }
+.zone--battery { flex: 1 1 0; }
+.zone--battery::before {       /* 배경 판: 카드 바깥으로 살짝 넓게 깔아 카드 크기는 그대로 */
+  content: ""; position: absolute; z-index: -1;
+  inset: calc(var(--zone-pad) * -1);
+  background: var(--battery-bg);
+  border-radius: 4px;
+}
+.zone__label {
+  display: flex; align-items: center; gap: 8px;
+  height: 24px; margin-bottom: 10px;
+  font-size: .9375rem; font-weight: 700; letter-spacing: -0.01em;
+}
+.zone__label span { font-weight: 500; color: var(--ink-subtle); font-variant-numeric: tabular-nums; }
+.zone__mark { width: 10px; height: 10px; border-radius: 2px; background: var(--ink); flex: none; }
+.zone--battery .zone__label { color: var(--battery-ink); }
+.zone--battery .zone__mark { background: var(--primary); }
+.zone--battery .zone__label span { color: var(--battery-ink); opacity: .7; }
+
+.zone__grid {
   display: grid;
   grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
   gap: var(--gap);
 }
-.tech-grid > li[hidden] { display: none; }
+.zone__grid > li[hidden] { display: none; }
 
 /* 카드: 이미지 배경 + 분야·기관 타원 + 가운데 제목 */
 .card {
@@ -195,7 +230,39 @@ button, input { font: inherit; color: inherit; }
   font-size: clamp(9px, 5.2cqi, 13px); font-weight: 600; line-height: 1.4;
   letter-spacing: -0.01em;
 }
-.pill--confirmed { background: rgba(15, 98, 254, .92); }
+.pill--confirmed { background: #fff; color: var(--primary); box-shadow: none; }
+/* 기관 태그 색 구분 */
+.pill--kist { background: rgba(0, 67, 206, .9); box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }   /* KIST 전북분원: 파랑 */
+.pill--jbnu { background: rgba(0, 125, 121, .9); box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }  /* 전북대학교: 청록 */
+
+/* 기술상담 신청 카드 */
+.card--apply {
+  align-items: flex-start; justify-content: flex-end;
+  gap: 4px;
+  padding: clamp(14px, 1.3vw, 24px);   /* 카드 자신의 폭 단위(cqi)는 안쪽 요소에만 쓸 수 있어 고정값 사용 */
+  background: var(--primary);
+  transition: background-color .2s ease;
+}
+.card--apply::after { display: none; }
+.card--apply:hover { background: var(--primary-hover); }
+.card--apply:active { background: var(--primary-press); }
+.card--apply__icon {
+  position: absolute; top: 8cqi; left: 8cqi;
+  display: grid; place-items: center;
+  width: 22cqi; height: 22cqi; max-width: 56px; max-height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .16);
+}
+.card--apply__title { font-size: clamp(16px, 9cqi, 26px); font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; }
+.card--apply__sub { font-size: clamp(11px, 5.6cqi, 14px); color: rgba(255, 255, 255, .78); }
+.card--apply__arrow {
+  position: absolute; right: 8cqi; bottom: 8cqi;
+  font-size: clamp(18px, 10cqi, 28px); line-height: 1;
+  transition: transform .2s ease;
+}
+.card--apply:hover .card--apply__arrow { transform: translateX(4px); }
+.apply-tile.is-closed .card--apply { background: var(--ink-muted); }
+.apply-tile.is-closed .card--apply__arrow { display: none; }
 
 /* 제목 띠: 가로로 꽉 찬 어두운 유리 (뒤 사진을 흐리게) */
 .card__band {
@@ -225,20 +292,23 @@ button, input { font: inherit; color: inherit; }
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
   .board { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  .tech-grid {
+  .zones { flex: 1; min-height: 0; padding-top: var(--zone-pad); }
+  .zone__grid {
     flex: 1; min-height: 0;
     grid-template-rows: repeat(var(--rows, 2), minmax(0, 1fr));
   }
-  .tech-grid > li { min-height: 0; }
+  .zone__grid > li { min-height: 0; }
   .card { aspect-ratio: auto; }
 }
 
 /* ---------- 태블릿·모바일: 세로 스크롤 ---------- */
 @media (max-width: 1023.98px), (max-height: 619.98px) {
-  .tech-grid { --cols: 3 !important; }
+  .zones { flex-direction: column; gap: calc(var(--zone-pad) * 2 + 24px); }
+  .zone--battery::before { left: calc(var(--gutter) * -1); right: calc(var(--gutter) * -1); border-radius: 0; }
+  .zone__grid { --cols: 3 !important; }
 }
 @media (max-width: 760px) {
-  .tech-grid { --cols: 2 !important; }
+  .zone__grid { --cols: 2 !important; }
   .hero { background-size: auto 200%; }
   .hero::before { background: linear-gradient(90deg, rgba(22,22,22,.94) 0%, rgba(22,22,22,.8) 100%); }
   .hero__inner { flex-direction: column; align-items: flex-start; gap: 16px; }
@@ -260,6 +330,9 @@ button, input { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .modal::backdrop { background: rgba(22, 22, 22, .78); }
+.modal--form { width: min(640px, calc(100% - 32px)); height: auto; max-height: calc(100dvh - 32px); }
+.modal--form .apply__title { display: none; }   /* 상단 제목과 중복 방지 */
+.modal--form .apply { padding-top: 8px; }
 .modal[open] { display: flex; animation: modal-in .22s ease-out; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(16px) scale(.985); } }
 .modal__panel { display: flex; flex-direction: column; width: 100%; min-height: 0; }
@@ -274,6 +347,8 @@ button, input { font: inherit; color: inherit; }
 .modal__pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
 .modal__pills .pill { background: var(--surface); color: var(--ink-muted); backdrop-filter: none; }
 .modal__pills .pill--confirmed { background: var(--primary); color: #fff; }
+.modal__pills .pill--kist { background: #e5edff; color: #0043ce; }
+.modal__pills .pill--jbnu { background: #d9f2f0; color: #005d5a; }
 .modal__title {
   font-size: clamp(1.125rem, 1rem + .5vw, 1.5rem);
   font-weight: 700; line-height: 1.35; letter-spacing: -0.02em;
@@ -359,6 +434,17 @@ button, input { font: inherit; color: inherit; }
 .field input::placeholder { color: #a8a8a8; opacity: 1; transition: color .1s; }
 .field input:focus::placeholder { color: transparent; }   /* 누르면 예시 사라짐 */
 .field input:focus { outline: none; border-bottom-color: var(--primary); background: #fff; box-shadow: inset 0 0 0 1px #c6c6c6; }
+.field select {           /* 기술 선택 드롭다운 (입력칸과 같은 모양) */
+  display: block; width: 100%; height: 52px;
+  padding: 0 44px 0 16px;
+  background: var(--field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%23161616' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 16px center;
+  border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  font-size: 1rem; color: var(--ink);
+  -webkit-appearance: none; appearance: none;
+  cursor: pointer;
+}
+.field select:focus { outline: none; border-bottom-color: var(--primary); background-color: #fff; box-shadow: inset 0 0 0 1px #c6c6c6; }
+.field select.is-invalid { border-bottom-color: var(--error); }
 .field input.is-invalid { border-bottom-color: var(--error); }
 .field input.is-fixed {
   background: #e8f0ff; color: var(--primary-press);

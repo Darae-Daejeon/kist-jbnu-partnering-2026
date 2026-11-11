@@ -43,7 +43,16 @@
         <button class="filter__btn" type="button" role="tab" aria-selected="false" data-filter="battery">이차전지 <span data-count="battery"></span></button>
       </div>
     </div>
-    <ul class="tech-grid" id="techGrid"></ul>
+    <div class="zones" id="techGrid">
+      <section class="zone zone--carbon" data-zone="carbon" aria-label="탄소복합소재 출품기술">
+        <h3 class="zone__label"><i class="zone__mark" aria-hidden="true"></i>탄소복합소재 <span data-count="carbon"></span></h3>
+        <ul class="zone__grid"></ul>
+      </section>
+      <section class="zone zone--battery" data-zone="battery" aria-label="이차전지 출품기술">
+        <h3 class="zone__label"><i class="zone__mark" aria-hidden="true"></i>이차전지 <span data-count="battery"></span></h3>
+        <ul class="zone__grid"></ul>
+      </section>
+    </div>
   </main>
 
   <!-- 기술 레이어 (소개자료 → 신청 → 완료) -->
@@ -93,6 +102,8 @@
           <div class="field">
             <label for="fTech">상담기술</label>
             <input id="fTech" name="tech" type="text" readonly tabindex="-1" class="is-fixed">
+            <select id="fTechSel" name="techSel" hidden></select>
+            <p class="field__err" data-err="tech"></p>
           </div>
           <div class="field">
             <label for="fOrg">소속</label>

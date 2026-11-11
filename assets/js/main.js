@@ -18,36 +18,94 @@
   /* =======================================================
      카드 목록
      ======================================================= */
-  var grid = $("techGrid");
+  var grid = $("techGrid");           /* 두 구역(탄소복합소재 · 이차전지)을 감싸는 영역 */
+  var ZONES = ["carbon", "battery"];
+  var zoneEl = {}, zoneList = {};
+  ZONES.forEach(function (z) {
+    zoneEl[z] = grid.querySelector('[data-zone="' + z + '"]');
+    zoneList[z] = zoneEl[z].querySelector(".zone__grid");
+  });
+
+  /* 기관 태그 색: KIST 전북분원 = 파랑, 전북대학교 = 청록 */
+  function orgClass(org) {
+    if (/KIST/i.test(org)) return " pill--kist";
+    if (/전북대/.test(org)) return " pill--jbnu";
+    return "";
+  }
   function pillsHtml(t) {
     return (t.confirmed ? '<span class="pill pill--confirmed">상담 확정</span>' : "") +
       '<span class="pill">' + esc(CAT[t.category] || "") + "</span>" +
-      (t.org ? '<span class="pill">' + esc(t.org) + "</span>" : "");
+      (t.org ? '<span class="pill' + orgClass(t.org) + '">' + esc(t.org) + "</span>" : "");
   }
-  grid.innerHTML = TECHS.map(function (t, idx) {
-    return '<li data-category="' + esc(t.category) + '">' +
+  TECHS.forEach(function (t, idx) {
+    var z = t.category === "battery" ? "battery" : "carbon";
+    var li = document.createElement("li");
+    li.dataset.category = z;
+    li.innerHTML =
       '<button class="card" type="button" data-index="' + idx + '" aria-label="' + esc(t.title) + ' 소개자료 보기">' +
         '<img class="card__img" src="' + esc(t.image) + '" alt="" decoding="async">' +
         '<span class="card__pills">' + pillsHtml(t) + "</span>" +
         '<span class="card__band"><span class="card__title">' + esc(t.title) + "</span></span>" +
-      "</button></li>";
-  }).join("");
+      "</button>";
+    zoneList[z].appendChild(li);
+  });
+
+  /* 기술상담 신청 카드 (카드와 같은 크기, 항상 맨 끝) */
+  var applyTile = document.createElement("li");
+  applyTile.className = "apply-tile";
+  applyTile.dataset.category = "apply";
+  applyTile.innerHTML =
+    '<button class="card card--apply" type="button" id="btnApplyAny">' +
+      '<span class="card--apply__icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><path d="M6 4h11l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M17 4v5h5M10 14h8M10 18h5" stroke="currentColor" stroke-width="2"/></svg></span>' +
+      '<span class="card--apply__title" id="applyTileTitle">기술상담 신청하기</span>' +
+      '<span class="card--apply__sub" id="applyTileSub">관심 기술을 골라 바로 신청</span>' +
+      '<span class="card--apply__arrow" aria-hidden="true">→</span>' +
+    "</button>";
 
   var counts = { all: TECHS.length, carbon: 0, battery: 0 };
-  TECHS.forEach(function (t) { if (counts[t.category] != null) counts[t.category]++; });
+  TECHS.forEach(function (t) { counts[t.category === "battery" ? "battery" : "carbon"]++; });
   document.querySelectorAll("[data-count]").forEach(function (el) { el.textContent = counts[el.dataset.count] || 0; });
 
-  /* 보이는 개수에 맞춰 한 화면 배치(열·행) 계산 */
+  /* 보이는 개수에 맞춰 한 화면 배치 계산
+     두 구역이 같은 줄 수를 쓰고, 구역마다 필요한 열 수만큼 폭을 나눠 가짐 → 카드 크기는 모두 같음 */
   var MIN_CARD_W = 150;   /* 카드가 이보다 좁아지면 줄 수를 늘림 (분야·기관 타원이 한 줄에 들어가는 최소 폭) */
+  var onePage = window.matchMedia("(min-width: 1024px) and (min-height: 620px)");
   function layoutGrid() {
-    var n = grid.querySelectorAll("li:not([hidden])").length || 1;
-    var rows = n <= 4 ? 1 : n <= 12 ? 2 : 3;
-    var cols = Math.ceil(n / rows);
-    var gap = parseFloat(getComputedStyle(grid).columnGap) || 0;
-    var w = grid.clientWidth;
-    while (rows < 5 && (w - gap * (cols - 1)) / cols < MIN_CARD_W) { rows++; cols = Math.ceil(n / rows); }
+    var visible = ZONES.filter(function (z) {
+      return zoneList[z].querySelectorAll("li:not([hidden]):not(.apply-tile)").length > 0;
+    });
+    if (!visible.length) visible = ["carbon"];
+    ZONES.forEach(function (z) { zoneEl[z].hidden = visible.indexOf(z) < 0; });
+    zoneList[visible[visible.length - 1]].appendChild(applyTile);   /* 신청 카드는 마지막 구역 맨 끝 */
+
+    var n = {};
+    visible.forEach(function (z) { n[z] = zoneList[z].querySelectorAll("li:not([hidden])").length; });
+
+    if (!onePage.matches) {   /* 태블릿·휴대폰: 구역을 위아래로 쌓고 CSS 열 수 사용 */
+      ZONES.forEach(function (z) { zoneEl[z].style.width = ""; zoneEl[z].style.flex = ""; });
+      return;
+    }
+    var total = visible.reduce(function (a, z) { return a + n[z]; }, 0);
+    var rows = total <= 4 ? 1 : total <= 12 ? 2 : 3;
+    var gs = getComputedStyle(grid);
+    var gap = parseFloat(getComputedStyle(zoneList[visible[0]]).columnGap) || 0;
+    var zoneGap = parseFloat(gs.columnGap) || 0;
+    var W = grid.clientWidth;
+    var cols, sum, cw;
+    function calc() {
+      cols = {}; sum = 0;
+      visible.forEach(function (z) { cols[z] = Math.max(1, Math.ceil(n[z] / rows)); sum += cols[z]; });
+      cw = (W - zoneGap * (visible.length - 1) - gap * (sum - visible.length)) / sum;
+    }
+    calc();
+    while (rows < 5 && cw < MIN_CARD_W) { rows++; calc(); }
     grid.style.setProperty("--rows", rows);
-    grid.style.setProperty("--cols", cols);
+    visible.forEach(function (z, i) {
+      zoneList[z].style.setProperty("--cols", cols[z]);
+      var last = i === visible.length - 1;   /* 마지막 구역은 남은 폭을 모두 사용 */
+      zoneEl[z].style.width = last ? "" : (cols[z] * cw + (cols[z] - 1) * gap) + "px";
+      zoneEl[z].style.flex = last ? "1 1 0" : "none";
+    });
   }
   layoutGrid();
   var layoutTimer;
@@ -75,7 +133,7 @@
   function applyFilter(f) {
     var run = ++filterRun;
     var items = [].slice.call(grid.querySelectorAll("li"));
-    var show = function (li) { return f === "all" || li.dataset.category === f; };
+    var show = function (li) { return f === "all" || li.dataset.category === f || li.dataset.category === "apply"; };
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     items.forEach(function (li) { if (li.getAnimations) li.getAnimations().forEach(function (a) { a.cancel(); }); });
@@ -134,13 +192,42 @@
   var current = null;
   var lastFocus = null;
 
+  var applyMode = "tech";   /* "tech": 기술 카드에서 신청 / "any": 신청 카드에서 기술 선택 */
+
   function setView(name) {
     modal.querySelectorAll(".view").forEach(function (v) { v.hidden = v.dataset.view !== name; });
-    $("btnBack").hidden = name !== "form";
-    if (name === "viewer") $("modalTitle").textContent = current.title;
+    $("btnBack").hidden = name !== "form" || applyMode === "any";
+    if (name === "viewer" && current) $("modalTitle").textContent = current.title;
+  }
+
+  function setTechField(any) {
+    $("fTech").hidden = any;
+    $("fTechSel").hidden = !any;
+    document.querySelector('label[for="fTech"], label[for="fTechSel"]').htmlFor = any ? "fTechSel" : "fTech";
+  }
+
+  /* 신청 카드 → 기술 선택형 신청 모달 */
+  function openApplyAny() {
+    if (isClosed()) { openClosed(); return; }
+    applyMode = "any";
+    current = null;
+    lastFocus = document.activeElement;
+    modal.classList.add("modal--form");
+    $("modalPills").innerHTML = "";
+    $("modalTitle").textContent = "기술상담 신청";
+    resetForm();
+    setTechField(true);
+    setView("form");
+    document.body.classList.add("is-locked");
+    if (typeof modal.showModal === "function") modal.showModal(); else modal.setAttribute("open", "");
+    if (!history.state || !history.state.layer) history.pushState({ layer: 1 }, "");
+    setTimeout(function () { $("fTechSel").focus(); }, 50);
   }
 
   function openModal(t) {
+    applyMode = "tech";
+    modal.classList.remove("modal--form");
+    setTechField(false);
     current = t;
     lastFocus = document.activeElement;
     $("modalPills").innerHTML = pillsHtml(t);
@@ -164,6 +251,8 @@
 
   modal.addEventListener("close", function () {
     document.body.classList.remove("is-locked");
+    modal.classList.remove("modal--form");
+    applyMode = "tech";
     destroyViewer();
     if (lastFocus) lastFocus.focus();
   });
@@ -181,7 +270,9 @@
 
   grid.addEventListener("click", function (e) {
     var btn = e.target.closest(".card");
-    if (btn) openModal(TECHS[+btn.dataset.index]);
+    if (!btn) return;
+    if (btn.id === "btnApplyAny") openApplyAny();
+    else openModal(TECHS[+btn.dataset.index]);
   });
 
   /* =======================================================
@@ -371,7 +462,17 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
   }
 
+  /* 기술 선택 목록 (분야별로 묶음) */
+  $("fTechSel").innerHTML = '<option value="">상담받을 기술을 선택하세요</option>' +
+    ZONES.map(function (z) {
+      var items = TECHS.filter(function (t) { return (t.category === "battery" ? "battery" : "carbon") === z; });
+      return items.length ? '<optgroup label="' + CAT[z] + '">' + items.map(function (t) {
+        return '<option value="' + esc(t.id) + '">' + esc(t.title) + "</option>";
+      }).join("") + "</optgroup>" : "";
+    }).join("");
+
   var rules = {
+    tech:  function () { return applyMode === "any" && !$("fTechSel").value ? "상담받을 기술을 선택해 주세요." : ""; },
     org:   function () { return $("fOrg").value.trim() ? "" : "소속을 입력해 주세요."; },
     name:  function () { return $("fName").value.trim() ? "" : "이름을 입력해 주세요."; },
     position: function () { return $("fPos").value.trim() ? "" : "직책 또는 직급을 입력해 주세요."; },
@@ -387,7 +488,7 @@
     },
     agree: function () { return $("fAgree").checked ? "" : "개인정보 수집·이용에 동의해 주세요."; },
   };
-  var inputs = { org: $("fOrg"), name: $("fName"), position: $("fPos"), phone: phone, email: email, agree: $("fAgree") };
+  var inputs = { tech: $("fTechSel"), org: $("fOrg"), name: $("fName"), position: $("fPos"), phone: phone, email: email, agree: $("fAgree") };
 
   function check(key) {
     var msg = rules[key]();
@@ -399,7 +500,7 @@
     var el = inputs[k];
     el.addEventListener("blur", function () { if (el.value || el.classList.contains("is-invalid")) check(k); });
     el.addEventListener("input", function () { if (el.classList.contains("is-invalid")) check(k); });
-    el.addEventListener("change", function () { if (k === "agree") check(k); });
+    el.addEventListener("change", function () { if (k === "agree" || k === "tech") check(k); });
   });
 
   function resetForm() {
@@ -419,6 +520,11 @@
     Object.keys(rules).forEach(function (k) { if (!check(k) && !firstBad) firstBad = inputs[k]; });
     if (firstBad) { firstBad.focus(); return; }
     if (form.website.value) return;   /* 스팸 봇 */
+    if (applyMode === "any") {
+      var sel = $("fTechSel").value;
+      current = TECHS.filter(function (t) { return t.id === sel; })[0];
+      if (!current) return;
+    }
 
     var data = {
       techId: current.id || "",
@@ -489,7 +595,12 @@
 
   function openClosed() {
     if (typeof closedModal.showModal === "function") closedModal.showModal(); else closedModal.setAttribute("open", "");
-    setView("viewer");
+    if (modal.open && applyMode === "tech") setView("viewer");
+  }
+  if (isClosed()) {   /* 마감 후 신청 카드 문구 */
+    $("applyTileTitle").textContent = "사전 신청 마감";
+    $("applyTileSub").textContent = "상담 문의 " + (SITE.contactPhone || "");
+    applyTile.classList.add("is-closed");
   }
   $("btnClosedOk").addEventListener("click", function () { closedModal.close(); });
   closedModal.addEventListener("click", function (e) { if (e.target === closedModal) closedModal.close(); });
