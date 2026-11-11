@@ -403,7 +403,7 @@ body.is-locked { overflow: hidden; }
 
 /* ---------- 사전 신청 마감 안내 ---------- */
 .closed {
-  width: min(440px, calc(100% - 32px));
+  width: min(480px, calc(100% - 32px));
   padding: 0; border: 0;
   background: var(--canvas); color: var(--ink);
 }
