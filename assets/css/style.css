@@ -208,7 +208,7 @@ button, input { font: inherit; color: inherit; }
 }
 .card::after {          /* 사진 전체는 살짝만 어둡게 + 위쪽 타원 자리 그늘 */
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 28%), rgba(0,0,0,var(--photo-dark));
+  background: linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 68%, rgba(0,0,0,.5) 100%), rgba(0,0,0,var(--photo-dark));
   transition: background-color .3s ease;
 }
 .card:hover .card__img { transform: scale(1.06); }
@@ -281,6 +281,26 @@ button, input { font: inherit; color: inherit; }
   transition: background-color .3s ease;
 }
 .card:hover .card__band { background: rgba(0, 45, 156, .62); }
+
+/* 핵심키워드 줄: 카드 맨 아래 한 줄
+   폭이 모자라면 뒤쪽 키워드가 둘째 줄로 넘어가는데, 높이를 한 줄로 고정해 넘어간 키워드는 가려짐
+   → 글자가 잘리거나 카드 밖으로 삐져나오지 않음 */
+.card__tags {
+  flex: none;
+  display: flex; flex-wrap: wrap; align-content: flex-start;
+  column-gap: .6em; row-gap: 4px;
+  height: 1.5em; overflow: hidden;
+  margin: 0 6cqi 5.5cqi;
+  font-size: clamp(10px, 5.4cqi, 13px);
+  line-height: 1.5;
+}
+.card__tag {
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;   /* 한 개가 카드보다 길면 … 처리 */
+  font-weight: 600; color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7), 0 0 8px rgba(0, 0, 0, .45);
+}
+.card.no-tags .card__tags { display: none; }
 .card__title {
   text-align: center;
   font-size: 1em;

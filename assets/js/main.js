@@ -37,6 +37,15 @@
       '<span class="pill">' + esc(CAT[t.category] || "") + "</span>" +
       (t.org ? '<span class="pill' + orgClass(t.org) + '">' + esc(t.org) + "</span>" : "");
   }
+  /* 핵심키워드: 최대 4개, 한 줄. 폭이 모자라면 CSS가 뒤쪽 키워드를 다음 줄로 넘겨 가림 */
+  function tagsHtml(t) {
+    var k = (t.keywords || []).filter(Boolean).slice(0, 4);
+    if (!k.length) return "";
+    return '<span class="card__tags">' + k.map(function (w) {
+      return '<span class="card__tag">#' + esc(String(w).replace(/^#/, "").replace(/\s+/g, "")) + "</span>";
+    }).join("") + "</span>";
+  }
+
   TECHS.forEach(function (t, idx) {
     var z = t.category === "battery" ? "battery" : "carbon";
     var li = document.createElement("li");
@@ -46,6 +55,7 @@
         '<img class="card__img" src="' + esc(t.image) + '" alt="" decoding="async">' +
         '<span class="card__pills">' + pillsHtml(t) + "</span>" +
         '<span class="card__band"><span class="card__title">' + esc(t.title) + "</span></span>" +
+        tagsHtml(t) +
       "</button>";
     zoneList[z].appendChild(li);
   });
@@ -107,7 +117,21 @@
       zoneEl[z].style.flex = last ? "1 1 0" : "none";
     });
   }
+  /* 카드가 너무 낮아 키워드 줄이 제목 띠와 겹치거나 카드 밖으로 나가면 키워드 줄을 숨김 */
+  function fitTags() {
+    grid.querySelectorAll(".card").forEach(function (c) {
+      var tags = c.querySelector(".card__tags");
+      if (!tags) return;
+      c.classList.remove("no-tags");
+      var band = c.querySelector(".card__band").getBoundingClientRect();
+      var r = tags.getBoundingClientRect(), cr = c.getBoundingClientRect();
+      if (r.top < band.bottom - 1 || r.bottom > cr.bottom + 1) c.classList.add("no-tags");   /* 겹치거나 밖으로 나갈 때만 */
+    });
+  }
+  var _layout = layoutGrid;
+  layoutGrid = function () { _layout(); fitTags(); };
   layoutGrid();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTags);
   var layoutTimer;
   window.addEventListener("resize", function () { clearTimeout(layoutTimer); layoutTimer = setTimeout(layoutGrid, 120); });
 
