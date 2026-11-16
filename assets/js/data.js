@@ -9,10 +9,10 @@ window.SITE = {
   applyEndpoint: "https://script.google.com/macros/s/AKfycbzNu6oht7t3rr2IfuUjG4ZKE8dyM5tTtYyWBXVyDIjObBMDmP_kB71MaV9kNItkBQVa/exec",
 
   /* 사전 신청 마감 시각 (한국 시간 기준, 이 시각부터 신청 불가)
-     2026-12-16T00:00:00+09:00 = 12월 15일(화) 24시
+     2026-12-01T00:00:00+09:00 = 11월 30일(월) 24시
      ※ 마감 화면 미리보기: 주소 뒤에 ?closed 붙여서 열기 */
-  deadline: "2026-12-16T00:00:00+09:00",
-  deadlineLabel: "2026년 12월 15일(화) 24시",
+  deadline: "2026-12-01T00:00:00+09:00",
+  deadlineLabel: "2026년 11월 30일(월) 24시",
   contactPhone: "042-716-7084",
 
   /* 신청 화면 안내문구 */
