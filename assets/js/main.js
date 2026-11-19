@@ -60,18 +60,6 @@
     zoneList[z].appendChild(li);
   });
 
-  /* 기술상담 신청 카드 (카드와 같은 크기, 항상 맨 끝) */
-  var applyTile = document.createElement("li");
-  applyTile.className = "apply-tile";
-  applyTile.dataset.category = "apply";
-  applyTile.innerHTML =
-    '<button class="card card--apply" type="button" id="btnApplyAny">' +
-      '<span class="card--apply__icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28"><path d="M6 4h11l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M17 4v5h5M10 14h8M10 18h5" stroke="currentColor" stroke-width="2"/></svg></span>' +
-      '<span class="card--apply__title" id="applyTileTitle">기술상담 신청하기</span>' +
-      '<span class="card--apply__sub" id="applyTileSub">관심 기술을 골라 바로 신청</span>' +
-      '<span class="card--apply__arrow" aria-hidden="true">→</span>' +
-    "</button>";
-
   var counts = { all: TECHS.length, carbon: 0, battery: 0 };
   TECHS.forEach(function (t) { counts[t.category === "battery" ? "battery" : "carbon"]++; });
   document.querySelectorAll("[data-count]").forEach(function (el) { el.textContent = counts[el.dataset.count] || 0; });
@@ -82,11 +70,10 @@
   var onePage = window.matchMedia("(min-width: 1024px) and (min-height: 620px)");
   function layoutGrid() {
     var visible = ZONES.filter(function (z) {
-      return zoneList[z].querySelectorAll("li:not([hidden]):not(.apply-tile)").length > 0;
+      return zoneList[z].querySelectorAll("li:not([hidden])").length > 0;
     });
     if (!visible.length) visible = ["carbon"];
     ZONES.forEach(function (z) { zoneEl[z].hidden = visible.indexOf(z) < 0; });
-    zoneList[visible[visible.length - 1]].appendChild(applyTile);   /* 신청 카드는 마지막 구역 맨 끝 */
 
     var n = {};
     visible.forEach(function (z) { n[z] = zoneList[z].querySelectorAll("li:not([hidden])").length; });
@@ -295,9 +282,9 @@
   grid.addEventListener("click", function (e) {
     var btn = e.target.closest(".card");
     if (!btn) return;
-    if (btn.id === "btnApplyAny") openApplyAny();
-    else openModal(TECHS[+btn.dataset.index]);
+    openModal(TECHS[+btn.dataset.index]);
   });
+  $("btnApplyAny").addEventListener("click", openApplyAny);   /* 출품기술 제목 줄의 공통 신청 버튼 */
 
   /* =======================================================
      소개자료 보기 + 확대·축소 (Panzoom 라이브러리)
@@ -621,10 +608,9 @@
     if (typeof closedModal.showModal === "function") closedModal.showModal(); else closedModal.setAttribute("open", "");
     if (modal.open && applyMode === "tech") setView("viewer");
   }
-  if (isClosed()) {   /* 마감 후 신청 카드 문구 */
-    $("applyTileTitle").textContent = "사전 신청 마감";
-    $("applyTileSub").textContent = "상담 문의 " + (SITE.contactPhone || "");
-    applyTile.classList.add("is-closed");
+  if (isClosed()) {   /* 마감 후 신청 버튼 문구 */
+    $("applyBtnLabel").textContent = "사전 신청 마감";
+    $("btnApplyAny").classList.add("is-closed");
   }
   $("btnClosedOk").addEventListener("click", function () { closedModal.close(); });
   closedModal.addEventListener("click", function (e) { if (e.target === closedModal) closedModal.close(); });
