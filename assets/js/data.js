@@ -62,6 +62,6 @@ window.TECHS = [
   { id: "T18", category: "carbon", org: "전북대학교", title: "400℃도 견디는 CNT 편광필름", image: "assets/img/T18.jpg", doc: "assets/docs/T18_SMK.jpg?v=20261117", keywords: ["폴더블", "차량용", "요오드대체", "초박막"], confirmed: false },
   { id: "T19", category: "carbon", org: "전북대학교", title: "50배 싼 카본블랙 스마트 광셔터", image: "assets/img/T19.jpg", doc: "assets/docs/T19_SMK.jpg?v=20261117", keywords: ["스마트윈도우", "변색없음", "광대역차광", "차량선루프"], confirmed: false },
   { id: "T20", category: "battery", org: "전북대학교", title: "불길 늦추는 에어로겔 배터리 케이스", image: "assets/img/T20.jpg", doc: "assets/docs/T20_SMK.jpg?v=20261117", keywords: ["열폭주지연", "경량화", "전기차", "ESS"], confirmed: false },
-  { id: "T21", category: "battery", org: "KIST 전북분원", title: "OLED 수명 늘리는 초박막 봉지필름", image: "assets/img/T21.jpg", doc: "assets/docs/T21_SMK.jpg?v=20261124", keywords: ["폴더블OLED", "수분차단", "저온공정", "태양전지"], confirmed: false },
+  { id: "T21", category: "battery", org: "KIST 전북분원", title: "OLED 수명 늘리는 초박막 봉지필름", image: "assets/img/T21.jpg", doc: "assets/docs/T21_SMK.jpg?v=20261126", keywords: ["폴더블OLED", "수분차단", "저온공정", "태양전지"], confirmed: false },
   { id: "T22", category: "battery", org: "KIST 전북분원", title: "빛 잘 통하고 습기 막는 유연 투명전극", image: "assets/img/T22.jpg", doc: "assets/docs/T22_SMK.jpg?v=202611242", keywords: ["ITO대체", "투명전극", "유연태양전지", "수분차단"], confirmed: false },
 ];
