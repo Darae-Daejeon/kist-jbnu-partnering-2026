@@ -196,6 +196,23 @@
     });
   }
 
+  /* 주소로 처음 보여줄 분야 지정 (eDM 버튼용)
+     ?filter=carbon  → 탄소복합소재만, ?filter=battery → 이차전지만 (#carbon, #battery도 가능) */
+  (function () {
+    var m = location.search.match(/[?&]filter=(carbon|battery)(?:&|$)/) || location.hash.match(/^#(carbon|battery)$/);
+    if (!m) return;
+    var f = m[1];
+    filterBtns.forEach(function (b) {
+      var on = b.dataset.filter === f;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    grid.querySelectorAll("li").forEach(function (li) {
+      li.hidden = !(li.dataset.category === f || li.dataset.category === "apply");
+    });
+    layoutGrid();
+  })();
+
   /* =======================================================
      기술 레이어 (모달)
      ======================================================= */
